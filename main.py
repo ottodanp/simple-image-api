@@ -1,0 +1,89 @@
+import mimetypes
+from os import mkdir, listdir
+from os.path import exists, join, splitext
+from typing import Dict
+
+from flask import Flask, Response, request, render_template, jsonify
+
+app = Flask(__name__)
+
+FILE_EXTENSIONS = [".jpg", ".png", ".jpeg"]
+BANNED_EXPRESSIONS = ["../"]
+
+
+def get_all_images(filepath: str) -> Dict[str, str]:
+    return {
+        item.split(".")[0]: item
+        for item in listdir(filepath)
+        if any(item.endswith(ext) for ext in FILE_EXTENSIONS)
+    }
+
+
+def filesystem_setup():
+    if not exists("graphs"):
+        mkdir("graphs")
+
+
+def sanitize_filename(filename: str) -> str:
+    for expression in BANNED_EXPRESSIONS:
+        filename = filename.replace(expression, "")
+    return filename
+
+
+@app.route("/graph")
+def graph():
+    args = request.args
+    graph_id = args.get("graph_id")
+    if graph_id is None:
+        return "No graphID", 400
+
+    images = get_all_images("graphs")
+    image_name = images.get(graph_id)
+    if image_name is None:
+        return "Bad image name", 404
+
+    filepath = f"graphs/{image_name}"
+    mime_type = mimetypes.guess_type(filepath)[0] or "application/octet-stream"
+
+    with open(filepath, "rb") as f:
+        image_data = f.read()
+
+    return Response(image_data, mimetype=mime_type)
+
+
+@app.route("/all_graphs")
+def all_graphs():
+    filesystem_setup()
+    return get_all_images("graphs")
+
+
+# 🆕 Upload HTML page
+@app.route("/upload")
+def upload_page():
+    return render_template("upload.html")
+
+
+# 🆕 Upload API endpoint
+@app.route("/upload_image", methods=["POST"])
+def upload_image():
+    image_id = request.form.get("imageID")
+    file = request.files.get("file")
+
+    if not image_id or not file:
+        return jsonify({"message": "Missing imageID or file"}), 400
+
+    image_id = sanitize_filename(image_id)
+    ext = splitext(file.filename)[1].lower()
+
+    if ext not in FILE_EXTENSIONS:
+        return jsonify({"message": "Invalid file type"}), 400
+
+    filepath = join("graphs", f"{image_id}{ext}")
+    file.save(filepath)
+
+    return jsonify({"message": f"Image '{image_id}{ext}' uploaded successfully!"})
+
+
+if __name__ == '__main__':
+    filesystem_setup()
+    app.run(host="127.0.0.1", port=80, debug=True)

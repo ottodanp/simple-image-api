@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Upload Image</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 40px;
+        }
+
+        input, button {
+            margin: 8px 0;
+        }
+    </style>
+</head>
+<body>
+<h2>Upload New Graph Image</h2>
+<label for="imageID">Image ID:</label><br>
+<input type="text" id="imageID" placeholder="e.g. lapchart"><br>
+<input type="file" id="fileInput" accept="image/*"><br>
+<button onclick="uploadImage()">Upload</button>
+
+<p id="status"></p>
+
+<script>
+    async function uploadImage() {
+        const imageID = document.getElementById('imageID').value.trim();
+        const fileInput = document.getElementById('fileInput');
+        const status = document.getElementById('status');
+
+        if (!imageID || fileInput.files.length === 0) {
+            status.textContent = "Please provide an image ID and select a file.";
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('imageID', imageID);
+        formData.append('file', fileInput.files[0]);
+
+        status.textContent = "Uploading...";
+
+        const response = await fetch('/upload_image', {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.json();
+        status.textContent = result.message;
+    }
+</script>
+</body>
+</html>
