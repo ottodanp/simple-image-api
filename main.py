@@ -3,7 +3,7 @@ from os import mkdir, listdir
 from os.path import exists, join, splitext
 from typing import Dict
 
-from flask import Flask, Response, request, render_template, jsonify
+from flask import Flask, Response, request, jsonify, render_template
 
 app = Flask(__name__)
 
@@ -57,34 +57,34 @@ def all_graphs():
     return get_all_images("graphs")
 
 
-# 🆕 Upload HTML page
-@app.route("/upload")
-def upload_page():
-    return render_template("upload.html")
-
-
-# 🆕 Upload API endpoint
 @app.route("/upload_image", methods=["POST"])
 def upload_image():
-    image_id = request.form.get("imageID")
-    file = request.files.get("file")
+    # Get list of uploaded files
+    files = request.files.getlist("files")
 
-    if not image_id or not file:
-        return jsonify({"message": "Missing imageID or file"}), 400
+    if not files:
+        return jsonify({"message": "No files uploaded"}), 400
 
-    image_id = sanitize_filename(image_id)
-    ext = splitext(file.filename)[1].lower()
+    saved_files = []
+    for file in files:
+        filename = sanitize_filename(file.filename)
+        ext = splitext(filename)[1].lower()
 
-    if ext not in FILE_EXTENSIONS:
-        return jsonify({"message": "Invalid file type"}), 400
+        if ext not in FILE_EXTENSIONS:
+            return jsonify({"message": f"Invalid file type: {filename}"}), 400
 
-    filepath = join("graphs", f"{image_id}{ext}")
-    file.save(filepath)
+        filepath = join("graphs", filename)
+        file.save(filepath)
+        saved_files.append(filename)
 
-    return jsonify({"message": f"Image '{image_id}{ext}' uploaded successfully!"})
+    return jsonify({"message": f"Uploaded {len(saved_files)} file(s): {', '.join(saved_files)}"})
+
+
+@app.route("/upload")
+def upload():
+    return render_template("upload.html")
 
 
 if __name__ == '__main__':
     filesystem_setup()
-    app.run(host="0.0.0.0", port=80, debug=True)
-
+    app.run(host="127.0.0.1", port=80, debug=True)
