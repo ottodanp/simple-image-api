@@ -1,41 +1,79 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <title>Upload Image</title>
+    <title>Upload Images</title>
     <style>
         body {
-            font-family: sans-serif;
+            font-family: Arial, sans-serif;
             margin: 40px;
+            background: #f9f9f9;
         }
-
+        h2 {
+            color: #333;
+        }
         input, button {
             margin: 8px 0;
+            padding: 8px;
+        }
+        #status {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        #preview {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        #preview img {
+            max-width: 150px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 4px;
+            background: white;
         }
     </style>
 </head>
 <body>
-<h2>Upload New Graph Image</h2>
-<label for="imageID">Image ID:</label><br>
-<input type="text" id="imageID" placeholder="e.g. lapchart"><br>
-<input type="file" id="fileInput" accept="image/*"><br>
-<button onclick="uploadImage()">Upload</button>
+    <h2>Upload Multiple Graph Images</h2>
+    <p>Select one or more image files to upload:</p>
 
-<p id="status"></p>
+    <input type="file" id="fileInput" accept="image/*" multiple><br>
+    <button onclick="uploadImages()">Upload</button>
 
-<script>
-    async function uploadImage() {
-        const imageID = document.getElementById('imageID').value.trim();
+    <p id="status"></p>
+
+    <div id="preview"></div>
+
+    <script>
+    // Show image previews before upload
+    document.getElementById('fileInput').addEventListener('change', function (event) {
+        const preview = document.getElementById('preview');
+        preview.innerHTML = '';
+        for (const file of event.target.files) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                preview.appendChild(img);
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    async function uploadImages() {
         const fileInput = document.getElementById('fileInput');
         const status = document.getElementById('status');
 
-        if (!imageID || fileInput.files.length === 0) {
-            status.textContent = "Please provide an image ID and select a file.";
+        if (fileInput.files.length === 0) {
+            status.textContent = "Please select one or more files to upload.";
             return;
         }
 
         const formData = new FormData();
-        formData.append('imageID', imageID);
-        formData.append('file', fileInput.files[0]);
+        for (const file of fileInput.files) {
+            formData.append('files', file);
+        }
 
         status.textContent = "Uploading...";
 
@@ -47,6 +85,6 @@
         const result = await response.json();
         status.textContent = result.message;
     }
-</script>
+    </script>
 </body>
 </html>
