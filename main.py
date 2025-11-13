@@ -94,14 +94,9 @@ def keys():
     if key is None or key != valid_key:
         return jsonify({"message": "No/Bad key provided"}), 400
 
-    return jsonify(
-        {
-            "key": open("key", "r").read().splitlines()[0]
-        }
-    )
+    return open("key", "r").read().splitlines()[0]
 
 
 if __name__ == '__main__':
     filesystem_setup()
     app.run(host="0.0.0.0", port=80, debug=True)
-
