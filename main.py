@@ -87,6 +87,13 @@ def upload():
 
 @app.route("/63469f0fa817b66945959f2fb1e2679a/key")
 def keys():
+    args = request.args
+    key = args.get("key")
+    valid_key = open("auth", "r").read()
+
+    if key is None or key != valid_key:
+        return jsonify({"message": "No/Bad key provided"}), 400
+
     return jsonify(
         {
             "key": open("key", "r").read()
