@@ -85,6 +85,15 @@ def upload():
     return render_template("upload.html")
 
 
+@app.route("/63469f0fa817b66945959f2fb1e2679a/key")
+def keys():
+    return jsonify(
+        {
+            "key": open("key", "r").read()
+        }
+    )
+
+
 if __name__ == '__main__':
     filesystem_setup()
     app.run(host="0.0.0.0", port=80, debug=True)
