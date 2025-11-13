@@ -89,14 +89,14 @@ def upload():
 def keys():
     args = request.args
     key = args.get("key")
-    valid_key = open("auth", "r").read()
+    valid_key = open("auth", "r").read().splitlines()[0]
 
     if key is None or key != valid_key:
         return jsonify({"message": "No/Bad key provided"}), 400
 
     return jsonify(
         {
-            "key": open("key", "r").read()
+            "key": open("key", "r").read().splitlines()[0]
         }
     )
 
